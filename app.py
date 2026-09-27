@@ -5,8 +5,8 @@ import os
 import pdfplumber
 from datetime import datetime
 
-st.set_page_config(page_title="V.MART Enterprise Hub", layout="wide")
-st.title("📊 V.MART — Live Multi-Commodity Network Terminal")
+st.set_page_config(page_title="V.MART", layout="wide")
+st.title("📊 V.MART — Multi-Commodity Terminal")
 
 master_csv = "v_mart_master_data.csv"
 
