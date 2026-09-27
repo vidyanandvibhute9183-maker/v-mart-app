@@ -1,4 +1,4 @@
+pypdf
 pdfplumber
 plotly
 pandas
-pyarrow
