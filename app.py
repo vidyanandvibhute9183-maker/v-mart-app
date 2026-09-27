@@ -28,10 +28,8 @@ def load_master_data():
 @st.cache_data(show_spinner=False)
 def lightning_fast_pdf_parse(file_bytes_stream):
     valid_records = []
-    # Clean structure rules bypassing heavy layout pattern scanning filters
     with pdfplumber.open(file_bytes_stream) as pdf:
         for page in pdf.pages:
-            # Low-overhead explicit vertical grid extraction
             matrix = page.extract_table(table_settings={
                 "vertical_strategy": "text", 
                 "horizontal_strategy": "text"
@@ -42,11 +40,10 @@ def lightning_fast_pdf_parse(file_bytes_stream):
             for row in matrix:
                 if row and len(row) >= 11:
                     try:
-                        # Direct Positional Targeting: Grabs columns directly by their exact index slots
-                        date_str = str(row[2]).strip()   # Bill Date Column Slot
-                        prod_str = str(row[8]).strip().upper() # Product Name Column Slot
-                        rate_str = str(row[10]).strip()  # Rate Column Slot
-                        qty_str = str(row[11]).strip()   # Qnty Column Slot
+                        date_str = str(row[2]).strip()   
+                        prod_str = str(row[8]).strip().upper() 
+                        rate_str = str(row[10]).strip()  
+                        qty_str = str(row[11]).strip()   
                         
                         if "/" in date_str or "-" in date_str:
                             rate_val = float(rate_str.replace(",", ""))
@@ -67,7 +64,6 @@ def lightning_fast_pdf_parse(file_bytes_stream):
         raw_df["Date"] = pd.to_datetime(raw_df["Date"], errors='coerce', format="mixed")
         raw_df = raw_df.dropna(subset=["Date"])
         
-        # Immediate memory array group processing
         compiled_list = []
         for (prod_name, day), group in raw_df.groupby(["Product", raw_df["Date"].dt.date]):
             compiled_list.append({
@@ -98,8 +94,8 @@ def inject_single_row(product_name, date_val, open_p, high_p, low_p, close_p, vo
 master_df = load_master_data()
 
 # --- SIDEBAR CONTROL PANEL ---
-st.sidebar.header("🕹️ V.MART Control Room")
-input_channel = st.sidebar.radio("Select Input Operation", ["📥 Upload Store Invoice PDF", "✏️ Add/Change Rates Manually"])
+st.sidebar.header("🕹 " + "V.MART Control Room")
+input_channel = st.sidebar.radio("Select Input Operation", ["📥 Upload Store Invoice PDF", "✏ Add/Change Rates Manually"])
 
 if input_channel == "📥 Upload Store Invoice PDF":
     st.sidebar.subheader("Bulk Document Parser")
@@ -138,27 +134,25 @@ else:
             st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.header("⚙️ View Configurations")
+st.sidebar.header("⚙ View Configurations")
 
 if not master_df.empty:
     product_catalog = sorted(master_df["Product"].unique().tolist())
     target_view = st.sidebar.selectbox("🎯 Select Product View", product_catalog)
     df = master_df[master_df["Product"] == target_view].copy().sort_values("Date")
-    chart_style = st.sidebar.selectbox("Select Chart Visual", ["Line Chart", "Candlestick"])
-    ma_intervals = st.sidebar.slider("Moving Average Filters", min_value=2, max_value=10, value=2)
+    chart_style = st.sidebar.selectbox("Select Chart Visual", ["Candlestick", "Line Chart"])
 else:
     df = pd.DataFrame()
 
 # --- GRAPHICAL MAIN WORKSPACE ---
 if not df.empty:
-    df[f"MA_{ma_intervals}"] = df["Close"].rolling(window=ma_intervals).mean()
     support_val = float(df["Low"].min())
     resistance_val = float(df["High"].max())
     latest_val = float(df["Close"].iloc[-1])
     total_volume = float(df["Volume"].sum())
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1: st.metric(f"Latest {target_view} Rate", f"₹{latest_val:.2f}")
+    with col1: st.metric(f"Latest {target_view} Price", f"₹{latest_val:.2f}")
     with col2: st.metric("Support Buy Zone Floor", f"₹{support_val:.2f}")
     with col3: st.metric("Resistance Sell Peak", f"₹{resistance_val:.2f}")
     with col4: st.metric("Accumulated Stock Volume", f"{total_volume:.1f} units")
@@ -171,7 +165,7 @@ if not df.empty:
     else:
         fig.add_trace(go.Scatter(x=df["Date"], y=df["Close"], mode="lines+markers", line=dict(color="#00CC96", width=3), name="Close Rate"))
 
-    fig.add_trace(go.Scatter(x=df["Date"], y=df[f"MA_{ma_intervals}"], mode="lines", line=dict(color="#FF9900", width=2, dash="dash"), name="Trend Line"))
+    # FIXED: The yellow trend line code loop blocks have been completely wiped out!
     fig.add_hline(y=support_val, line_dash="dot", line_color="green", annotation_text="Support Floor")
     fig.add_hline(y=resistance_val, line_dash="dot", line_color="red", annotation_text="Resistance Ceiling")
 
