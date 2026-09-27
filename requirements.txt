@@ -1,0 +1,4 @@
+pdfplumber
+plotly
+pandas
+pyarrow
