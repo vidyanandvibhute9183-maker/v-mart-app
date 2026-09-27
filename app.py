@@ -10,7 +10,7 @@ st.title("📊 V.MART — Live Multi-Commodity Network Terminal")
 
 master_csv = "v_mart_master_data.csv"
 
-# --- CORE STABLE DATABASE LOADER ---
+# --- CORE HIGH-SPEED MEMORY DATABASE LOADER ---
 def load_master_data():
     if os.path.exists(master_csv) and os.path.getsize(master_csv) > 0:
         df = pd.read_csv(master_csv)
@@ -24,63 +24,52 @@ def load_master_data():
         df.to_csv(master_csv, index=False)
         return df
 
-# FAULT-TOLERANT MATRIX SCROLLER
-def robust_grid_pdf_parse(file_bytes_stream):
+# LIGHTNING-FAST STREAM EXTRACTION ENGINE
+@st.cache_data(show_spinner=False)
+def lightning_fast_pdf_parse(file_bytes_stream):
     valid_records = []
+    # Clean structure rules bypassing heavy layout pattern scanning filters
     with pdfplumber.open(file_bytes_stream) as pdf:
         for page in pdf.pages:
-            # Reads all structural tables without enforcing strict margin line checks
+            # Low-overhead explicit vertical grid extraction
             matrix = page.extract_table(table_settings={
                 "vertical_strategy": "text", 
-                "horizontal_strategy": "text",
-                "snap_tolerance": 3
+                "horizontal_strategy": "text"
             })
             if not matrix:
                 continue
                 
             for row in matrix:
-                # Dynamically filter out empty cells and clean text fragments
-                clean_row = [str(cell).strip() for cell in row if cell is not None]
-                
-                # Check for standard transaction rows by locating item matches or price scales
-                if len(clean_row) >= 6:
-                    # Look for date structures and isolate rate indices dynamically
-                    for cell in clean_row:
-                        if ("/" in cell or "-" in cell) and len(cell) >= 8:
-                            try:
-                                # Safe vector matching rules targeting values out of your POS template layout
-                                rate_idx = -3 if len(clean_row) >= 11 else -2
-                                qty_idx = -2 if len(clean_row) >= 11 else -1
-                                
-                                rate_val = float(clean_row[rate_idx].replace(",", ""))
-                                qty_val = float(clean_row[qty_idx].replace(",", ""))
-                                
-                                # Match item tags matching Diamond Wheat lines
-                                prod_name = "DIAMOND WHEAT"
-                                for text in clean_row:
-                                    if "WHEAT" in text.upper() or "DIAMOND" in text.upper():
-                                        prod_name = "DIAMOND WHEAT"
-                                        break
-                                
-                                if rate_val > 0:
-                                    valid_records.append({
-                                        "Product": prod_name,
-                                        "Date": cell,
-                                        "Rate": rate_val,
-                                        "Qnty": qty_val if qty_val > 0 else 1.0
-                                    })
-                                    break
-                            except Exception:
-                                continue
-                                
+                if row and len(row) >= 11:
+                    try:
+                        # Direct Positional Targeting: Grabs columns directly by their exact index slots
+                        date_str = str(row[2]).strip()   # Bill Date Column Slot
+                        prod_str = str(row[8]).strip().upper() # Product Name Column Slot
+                        rate_str = str(row[10]).strip()  # Rate Column Slot
+                        qty_str = str(row[11]).strip()   # Qnty Column Slot
+                        
+                        if "/" in date_str or "-" in date_str:
+                            rate_val = float(rate_str.replace(",", ""))
+                            qty_val = float(qty_str.replace(",", "")) if qty_str else 1.0
+                            
+                            if rate_val > 0:
+                                valid_records.append({
+                                    "Product": prod_str if prod_str else "DIAMOND WHEAT",
+                                    "Date": date_str,
+                                    "Rate": rate_val,
+                                    "Qnty": qty_val
+                                })
+                    except (ValueError, IndexError):
+                        continue
+                        
     if valid_records:
         raw_df = pd.DataFrame(valid_records)
         raw_df["Date"] = pd.to_datetime(raw_df["Date"], errors='coerce', format="mixed")
         raw_df = raw_df.dropna(subset=["Date"])
         
+        # Immediate memory array group processing
         compiled_list = []
         for (prod_name, day), group in raw_df.groupby(["Product", raw_df["Date"].dt.date]):
-            group = group.sort_index()
             compiled_list.append({
                 "Product": str(prod_name),
                 "Date": pd.to_datetime(str(day)),
@@ -117,21 +106,16 @@ if input_channel == "📥 Upload Store Invoice PDF":
     uploaded_file = st.sidebar.file_uploader("Drop Store Sale Report (.pdf)", type=["pdf"])
     if uploaded_file is not None:
         if st.sidebar.button("🚀 Run Cloud Extraction Engine", use_container_width=True):
-            with st.spinner("⚡ Running structural matrix scan..."):
-                extracted_df = robust_grid_pdf_parse(uploaded_file)
+            with st.spinner("⚡ Running Lightning-Fast Extraction..."):
+                extracted_df = lightning_fast_pdf_parse(uploaded_file)
                 
             if not extracted_df.empty:
                 combined_master = pd.concat([master_df, extracted_df]).drop_duplicates(subset=["Product", "Date"], keep="last")
                 combined_master.to_csv(master_csv, index=False)
-                st.sidebar.success("✅ Invoice Data Ingested Flawlessly!")
+                st.sidebar.success("✅ Invoice Data Ingested Instantly!")
                 st.rerun()
             else:
-                st.sidebar.error("⚠️ Pattern layout mismatch. Review raw column contents below.")
-                
-                # DIAGNOSTICS VIEWER: Prints the first few lines of your file to see how text is split
-                with pdfplumber.open(uploaded_file) as pdf:
-                    first_page_text = pdf.pages[0].extract_text()
-                    st.text_area("📄 Raw Text Structure inside your PDF file:", first_page_text, height=250)
+                st.sidebar.error("⚠️ Column array mismatch. If processing fails, use the Manual Input Form below.")
 else:
     st.sidebar.subheader("Live Price Changer Form")
     type_new = st.sidebar.checkbox("Register Brand New Product?")
@@ -194,3 +178,7 @@ if not df.empty:
     fig.update_layout(template="plotly_dark", height=520, xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
     
+    st.subheader(f"📋 Price Record Ledger History: {target_view}")
+    st.dataframe(df, use_container_width=True)
+else:
+    st.info("System operational. Deploy sidebar controllers to stream data maps.")
