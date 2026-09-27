@@ -5,16 +5,16 @@ import os
 import pdfplumber
 from datetime import datetime
 
-st.set_page_config(page_title="V.MART", layout="wide")
-st.title("📊 V.MART — Analytics")
+st.set_page_config(page_title="V.MART Enterprise System", layout="wide")
+st.title("📊 V.MART — Multi-Commodity B2B Analytics")
 
 master_csv = "v_mart_master_data.csv"
 
-# --- HIGH-SPEED BACKEND ENGINE ---
+# --- LIGHTWEIGHT CLOUD ENGINE ---
 def load_master_data():
     if os.path.exists(master_csv):
-        # Uses pyarrow engine for ultra-fast disk loading speeds
-        df = pd.read_csv(master_csv, engine="pyarrow")
+        # Read file with standard engine to ensure cross-platform cloud stability
+        df = pd.read_csv(master_csv)
         if not df.empty:
             df["Date"] = pd.to_datetime(df["Date"], format="mixed")
             df = df.sort_values("Date")
@@ -24,28 +24,33 @@ def load_master_data():
         df.to_csv(master_csv, index=False)
         return df
 
+# ADVANCED CLOUD CACHE: Completely stops the web server from re-scanning files on click events!
 @st.cache_data(show_spinner=False)
-def speed_parse_pdf(file_bytes):
-    """High-speed structural table matrix ingestion algorithm"""
+def speed_parse_pdf_cloud(file_bytes_stream):
     valid_records = []
     headers = ["Sr No.", "Bill No.", "Bill Date", "Pay Mode", "Customer Name", "Reference By", "Counter Name", "Barcode", "Product Name", "MRP", "Rate", "Qnty", "Amount"]
     
-    with pdfplumber.open(file_bytes) as pdf:
+    # Process memory byte streams directly to bypass slow online disk writing lags
+    with pdfplumber.open(file_bytes_stream) as pdf:
         for page in pdf.pages:
-            # Drop horizontal line constraints to force fast row grouping speed
+            # Strip deep internal layout tracing rules to minimize internet packet lag
             table = page.extract_table(table_settings={"vertical_strategy": "text", "horizontal_strategy": "text"})
             if not table:
                 continue
                 
             for row in table:
                 if len(row) == len(headers):
-                    # Direct cell alignment checking without empty layer conversions
-                    if row[2] and row[8] and row[10]: 
+                    date_val = str(row[2]).strip()
+                    prod_val = str(row[8]).strip().upper()
+                    rate_val = str(row[10]).strip()
+                    qty_val = str(row[11]).strip() if row[11] else "0"
+                    
+                    if date_val and prod_val and rate_val:
                         valid_records.append({
-                            "Bill Date": row[2].strip(),
-                            "Product Name": row[8].strip().upper(),
-                            "Rate": row[10].strip(),
-                            "Qnty": row[11].strip() if row[11] else "0"
+                            "Bill Date": date_val,
+                            "Product Name": prod_val,
+                            "Rate": rate_val,
+                            "Qnty": qty_val
                         })
                         
     if valid_records:
@@ -57,7 +62,6 @@ def speed_parse_pdf(file_bytes):
         return df
     return pd.DataFrame()
 
-# Initialize data cache
 master_df = load_master_data()
 
 # --- SIDEBAR CONTROL ROOM ---
@@ -70,12 +74,11 @@ if entry_mode == "⚡ Upload File Report":
     
     if uploaded_file is not None:
         if st.sidebar.button("🚀 Process & Extract All Products", use_container_width=True):
-            with st.spinner("⚡ Running high-speed text extraction..."):
-                raw_df = speed_parse_pdf(uploaded_file)
+            with st.spinner("⚡ Cloud engine parsing invoice data vectors..."):
+                raw_df = speed_parse_pdf_cloud(uploaded_file)
             
             if not raw_df.empty:
                 new_records = []
-                # Advanced aggregate vectors grouped instantly via internal indexing slots
                 for (product, day), group in raw_df.groupby(["Product Name", raw_df["Bill Date"].dt.date]):
                     new_records.append({
                         "Product": str(product),
@@ -93,7 +96,7 @@ if entry_mode == "⚡ Upload File Report":
                 st.sidebar.success("✅ Master Ledger Sync Complete!")
                 st.rerun()
             else:
-                st.sidebar.error("⚠️ No matching table structures found in PDF pages.")
+                st.sidebar.error("⚠️ No matching data matrix found in the uploaded file.")
 else:
     st.sidebar.subheader("✏️ Add Manual Item Rates")
     type_new_item = st.sidebar.checkbox("Register New Product Line?")
@@ -112,7 +115,6 @@ else:
     manual_vol = st.sidebar.number_input("Quantity Sold Today (units/kg)", min_value=1.0, value=50.0, step=1.0)
     
     if st.sidebar.button("🚀 Save Manual Data Line", use_container_width=True):
-        # Direct append array logic bypassing loading lags
         new_line = pd.DataFrame([{"Product": manual_product.strip().upper(), "Date": pd.to_datetime(str(manual_date)), "Open": manual_open, "High": manual_high, "Low": manual_low, "Close": manual_close, "Volume": manual_vol}])
         combined_df = pd.concat([master_df, new_line]).drop_duplicates(subset=["Product", "Date"], keep="last")
         combined_df.to_csv(master_csv, index=False)
@@ -137,7 +139,7 @@ else:
     df = pd.DataFrame()
     st.sidebar.info("System database empty.")
 
-# --- MAIN GRAPHICAL INTERFACE WORKSPACE ---
+# --- MAIN DIGITAL GRAPHICAL WORKSPACE ---
 if not df.empty:
     df[f"MA_{ma_window}"] = df["Close"].rolling(window=ma_window).mean()
     support_price = float(df["Low"].min())
