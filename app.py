@@ -18,18 +18,18 @@ def load_master_data():
     else:
         # Standard initial baseline rows to populate charts immediately
         df = pd.DataFrame([
-            {"Product": "DIAMOND WHEAT", "Date": "2026-09-27", "Open": 40.0, "High": 42.0, "Low": 39.5, "Close": 41.0, "Volume": 100.0},
-            {"Product": "SUGAR", "Date": "2026-09-27", "Open": 50.0, "High": 52.0, "Low": 49.0, "Close": 51.5, "Volume": 150.0}
+            {"Product": "DIAMOND WHEAT", "Date": "2026-09-27", "Open": 40.0, "High": 42.0, "Low": 39.5, "Close": 41.0},
+            {"Product": "SUGAR", "Date": "2026-09-27", "Open": 50.0, "High": 52.0, "Low": 49.0, "Close": 51.5}
         ])
         df["Date"] = pd.to_datetime(df["Date"])
         df.to_csv(master_csv, index=False)
         return df
 
-def inject_single_row(product_name, date_val, open_p, high_p, low_p, close_p, volume_p):
+def inject_single_row(product_name, date_val, open_p, high_p, low_p, close_p):
     master_df = load_master_data()
     prod_clean = str(product_name).strip().upper()
     date_clean = pd.to_datetime(str(date_val))
-    new_data = pd.DataFrame([{"Product": prod_clean, "Date": date_clean, "Open": float(open_p), "High": float(high_p), "Low": float(low_p), "Close": float(close_p), "Volume": float(volume_p)}])
+    new_data = pd.DataFrame([{"Product": prod_clean, "Date": date_clean, "Open": float(open_p), "High": float(high_p), "Low": float(low_p), "Close": float(close_p)}])
     if not master_df.empty:
         # Overwrite matching duplicate lines to maintain pure database records
         master_df = master_df[~((master_df["Product"] == prod_clean) & (master_df["Date"] == date_clean))]
@@ -43,13 +43,13 @@ master_df = load_master_data()
 
 # --- SIDEBAR INTERFACE: CLEAN LIVE PRICE CHANGER ONLY ---
 st.sidebar.header("✏️ V.MART Live Rate Changer")
-type_new = st.sidebar.checkbox("Register Brand New Product?")
+type_new = st.sidebar.checkbox("Register New Product")
 
 if type_new or master_df.empty:
     manual_prod = st.sidebar.text_input("Type Product Name", "DIAMOND WHEAT")
 else:
     available_items = sorted(master_df["Product"].unique().tolist())
-    manual_prod = st.sidebar.selectbox("Choose Target Item", available_items)
+    manual_prod = st.sidebar.selectbox("Choose Item", available_items)
     
 manual_date = st.sidebar.date_input("Transaction Date", datetime.now().date())
 m_open = st.sidebar.number_input("Open Price (₹)", min_value=1.0, value=40.0, step=0.5)
@@ -57,7 +57,7 @@ m_high = st.sidebar.number_input("High Price (₹)", min_value=1.0, value=42.0, 
 m_low = st.sidebar.number_input("Low Price (₹)", min_value=1.0, value=39.0, step=0.5)
 m_close = st.sidebar.number_input("Close Price (₹)", min_value=1.0, value=40.0, step=0.5)
 
-if st.sidebar.button("🚀 Push Rate Update Live", use_container_width=True):
+if st.sidebar.button("🚀 Update the Rates", use_container_width=True):
     if inject_single_row(manual_prod, manual_date, m_open, m_high, m_low, m_close):
         st.sidebar.success(f"✅ Live Update Complete for {manual_prod.upper()}!")
         st.rerun()
@@ -78,9 +78,8 @@ if not df.empty:
     support_val = float(df["Low"].min())
     resistance_val = float(df["High"].max())
     latest_val = float(df["Close"].iloc[-1])
-    total_volume = float(df["Volume"].sum())
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, = st.columns(3)
     with col1: st.metric(f"Latest {target_view} Price", f"₹{latest_val:.2f}")
     with col2: st.metric("Support Buy Zone Floor", f"₹{support_val:.2f}")
     with col3: st.metric("Resistance Sell Peak", f"₹{resistance_val:.2f}")
