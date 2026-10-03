@@ -58,7 +58,7 @@ m_low = st.sidebar.number_input("Low Price (₹)", min_value=1.0, value=39.0, st
 m_close = st.sidebar.number_input("Close Price (₹)", min_value=1.0, value=40.0, step=0.5)
 
 if st.sidebar.button("🚀 Push Rate Update Live", use_container_width=True):
-    if inject_single_row(manual_prod, manual_date, m_open, m_high, m_low, m_close, m_vol):
+    if inject_single_row(manual_prod, manual_date, m_open, m_high, m_low, m_close):
         st.sidebar.success(f"✅ Live Update Complete for {manual_prod.upper()}!")
         st.rerun()
 
