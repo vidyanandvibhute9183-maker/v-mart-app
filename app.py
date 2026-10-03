@@ -4,8 +4,8 @@ import plotly.graph_objects as go
 import os
 from datetime import datetime
 
-st.set_page_config(page_title="V.MART Enterprise Hub", layout="wide")
-st.title("📊 V.MART — Live Multi-Commodity Network Terminal")
+st.set_page_config(page_title="V.MART", layout="wide")
+st.title("📊 V.MART — The Rate Trader")
 
 master_csv = "v_mart_master_data.csv"
 
@@ -56,7 +56,6 @@ m_open = st.sidebar.number_input("Open Price (₹)", min_value=1.0, value=40.0, 
 m_high = st.sidebar.number_input("High Price (₹)", min_value=1.0, value=42.0, step=0.5)
 m_low = st.sidebar.number_input("Low Price (₹)", min_value=1.0, value=39.0, step=0.5)
 m_close = st.sidebar.number_input("Close Price (₹)", min_value=1.0, value=40.0, step=0.5)
-m_vol = st.sidebar.number_input("Quantity Sold Today (units/kg)", min_value=1.0, value=100.0, step=5.0)
 
 if st.sidebar.button("🚀 Push Rate Update Live", use_container_width=True):
     if inject_single_row(manual_prod, manual_date, m_open, m_high, m_low, m_close, m_vol):
@@ -85,7 +84,6 @@ if not df.empty:
     with col1: st.metric(f"Latest {target_view} Price", f"₹{latest_val:.2f}")
     with col2: st.metric("Support Buy Zone Floor", f"₹{support_val:.2f}")
     with col3: st.metric("Resistance Sell Peak", f"₹{resistance_val:.2f}")
-    with col4: st.metric("Accumulated Stock Volume", f"{total_volume:.1f} units")
 
     st.markdown("---")
 
