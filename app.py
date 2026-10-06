@@ -46,7 +46,7 @@ st.sidebar.header("✏️ V.MART Live Rate Changer")
 type_new = st.sidebar.checkbox("Register New Product")
 
 if type_new or master_df.empty:
-    manual_prod = st.sidebar.text_input("Type Product Name", "Type Product Name")
+    manual_prod = st.sidebar.text_input("Product Name", "Type Product Name Here")
 else:
     available_items = sorted(master_df["Product"].unique().tolist())
     manual_prod = st.sidebar.selectbox("Choose Item", available_items)
