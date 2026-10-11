@@ -4,10 +4,11 @@ from supabase import create_client, Client
 # Hardcoding the public endpoints directly to avoid cached panel errors
 @st.cache_resource
 def get_supabase_client() -> Client:
+  @st.cache_resource
+def get_supabase_client() -> Client:
     url = "https://supabase.co"
-    key = "sb_publishable_ro3Lwte8OjXAgO5lMU3d_g_OGHg1"
+    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlenNucHVjdGN0eHR6d2doY3B4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MDA4MjMsImV4cCI6MjEwNzI3NjgyM30.HAYnnGgsoNPLNEBPM5V2gqgEfK5LJ9hsMTrc9vdiNxw"  # Replace this completely with the key starting with eyJ
     return create_client(url, key)
-
 def check_password():
     """Manages the full login, signup, and email verification workflows via Supabase."""
     supabase = get_supabase_client()
