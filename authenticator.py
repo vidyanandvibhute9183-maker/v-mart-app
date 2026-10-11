@@ -14,7 +14,8 @@ def send_discord_alert(username, name, action="logged into"):
     
     try:
         response = requests.post(webhook_url, json=payload)
-        if response.status_code not in:
+        # FIXED: Removed the incomplete syntax statement completely
+        if response.status_code != 204 and response.status_code != 200:
             st.error(f"Webhook tracking error: {response.text}")
     except Exception as e:
         st.error(f"Could not connect to live alerts: {e}")
