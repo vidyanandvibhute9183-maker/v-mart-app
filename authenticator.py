@@ -14,7 +14,6 @@ def send_discord_alert(username, name, action="logged into"):
     
     try:
         response = requests.post(webhook_url, json=payload)
-        # FIXED: Removed the incomplete syntax statement completely
         if response.status_code != 204 and response.status_code != 200:
             st.error(f"Webhook tracking error: {response.text}")
     except Exception as e:
@@ -36,7 +35,8 @@ def check_password():
 
     if auth_mode == "Sign Up":
         try:
-            email, username, name = authenticator.register_user(location='main', pre_authorized=None)
+            # FIXED: Added captcha=False to completely disable the broken captcha entry check
+            email, username, name = authenticator.register_user(location='main', pre_authorized=None, captcha=False)
             if username:
                 with open('config.yaml', 'w') as file:
                     yaml.dump(config, file, default_flow_style=False)
