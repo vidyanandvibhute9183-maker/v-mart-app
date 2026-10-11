@@ -2,3 +2,5 @@ pypdf
 pdfplumber
 plotly
 pandas
+streamlit-authenticator
+pyyaml
