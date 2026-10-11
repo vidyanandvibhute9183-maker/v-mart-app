@@ -27,6 +27,7 @@ def check_password():
     with open('config.yaml') as file:
         config = yaml.load(file, Loader=SafeLoader)
 
+    # Updated initialization format for newer version compatibility
     authenticator = stauth.Authenticate(
         config['credentials'],
         config['cookie']['name'],
@@ -34,7 +35,16 @@ def check_password():
         config['cookie']['expiry_days']
     )
 
-    name, authentication_status, username = authenticator.login('main')
+    # Fixed syntax for the login widget function
+    login_result = authenticator.login(location='main')
+    
+    # Safely unpacking values depending on the exact library version behavior
+    if isinstance(login_result, tuple):
+        name, authentication_status, username = login_result
+    else:
+        authentication_status = st.session_state.get('authentication_status')
+        name = st.session_state.get('name')
+        username = st.session_state.get('username')
 
     if authentication_status:
         if 'logged_in_alert_sent' not in st.session_state:
@@ -46,6 +56,6 @@ def check_password():
     elif authentication_status is False:
         st.error('Username/password is incorrect')
         return False
-    elif authentication_status is None:
+    else:
         st.warning('Please enter your username and password')
         return False
