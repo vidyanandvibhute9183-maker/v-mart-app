@@ -4,4 +4,4 @@ plotly
 pandas
 streamlit-authenticator
 pyyaml
-supabase
+requests
