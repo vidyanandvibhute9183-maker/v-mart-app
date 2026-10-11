@@ -16,18 +16,17 @@ def send_login_alert(username, name):
     msg['To'] = receiver_email
     
     try:
-        with smtplib.SMTP_SSL('://gmail.com', 465) as server:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email, msg.as_string())
     except Exception as e:
         st.error(f"Failed to send email alert: {e}")
 
 def check_password():
-    """Returns True if the user is authenticated, otherwise False."""
+    """Manages the registration and login flows. Returns True if authenticated."""
     with open('config.yaml') as file:
         config = yaml.load(file, Loader=SafeLoader)
 
-    # Updated initialization format for newer version compatibility
     authenticator = stauth.Authenticate(
         config['credentials'],
         config['cookie']['name'],
@@ -35,27 +34,43 @@ def check_password():
         config['cookie']['expiry_days']
     )
 
-    # Fixed syntax for the login widget function
-    login_result = authenticator.login(location='main')
-    
-    # Safely unpacking values depending on the exact library version behavior
-    if isinstance(login_result, tuple):
-        name, authentication_status, username = login_result
-    else:
-        authentication_status = st.session_state.get('authentication_status')
-        name = st.session_state.get('name')
-        username = st.session_state.get('username')
+    # Add a visual selection toggle at the top of the authentication screen
+    auth_mode = st.radio("Choose Option", ["Login", "Sign Up"], horizontal=True)
 
-    if authentication_status:
-        if 'logged_in_alert_sent' not in st.session_state:
-            send_login_alert(username, name)
-            st.session_state['logged_in_alert_sent'] = True
-            
-        authenticator.logout('Logout', 'sidebar')
-        return True
-    elif authentication_status is False:
-        st.error('Username/password is incorrect')
+    if auth_mode == "Sign Up":
+        try:
+            # Renders a complete new user signup widget
+            # Set pre_authorized=None to allow absolutely anyone to register
+            email, username, name = authenticator.register_user(location='main', pre_authorized=None)
+            if username:
+                # CRITICAL: Save the newly created user credentials back into your config.yaml
+                with open('config.yaml', 'w') as file:
+                    yaml.dump(config, file, default_flow_style=False)
+                st.success('Registration successful! You can now switch to Login mode.')
+        except Exception as e:
+            st.error(f"Registration Error: {e}")
         return False
-    else:
-        st.warning('Please enter your username and password')
-        return False
+
+    elif auth_mode == "Login":
+        login_result = authenticator.login(location='main')
+        
+        if isinstance(login_result, tuple):
+            name, authentication_status, username = login_result
+        else:
+            authentication_status = st.session_state.get('authentication_status')
+            name = st.session_state.get('name')
+            username = st.session_state.get('username')
+
+        if authentication_status:
+            if 'logged_in_alert_sent' not in st.session_state:
+                send_login_alert(username, name)
+                st.session_state['logged_in_alert_sent'] = True
+                
+            authenticator.logout('Logout', 'sidebar')
+            return True
+        elif authentication_status is False:
+            st.error('Username/password is incorrect')
+            return False
+        else:
+            st.warning('Please enter your username and password')
+            return False
