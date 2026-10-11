@@ -1,21 +1,17 @@
 import streamlit as st
 from supabase import create_client, Client
 
-# Hardcoding the public endpoints directly to avoid cached panel errors
 @st.cache_resource
 def get_supabase_client() -> Client:
-  @st.cache_resource
-def get_supabase_client() -> Client:
     url = "https://supabase.co"
-    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlenNucHVjdGN0eHR6d2doY3B4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MDA4MjMsImV4cCI6MjEwNzI3NjgyM30.HAYnnGgsoNPLNEBPM5V2gqgEfK5LJ9hsMTrc9vdiNxw"  # Replace this completely with the key starting with eyJ
+    key = "sb_publishable_ro3Lwte8OjXAgO5lMU3d_g_OGHg1"
     return create_client(url, key)
+
 def check_password():
-    """Manages the full login, signup, and email verification workflows via Supabase."""
     supabase = get_supabase_client()
     
     auth_mode = st.radio("Choose Option", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
-    # 1. SIGN UP FLOW
     if auth_mode == "Sign Up":
         with st.form("signup_form"):
             email = st.text_input("Email Address")
@@ -24,14 +20,12 @@ def check_password():
             
             if submitted:
                 try:
-                    # Automatically sends a confirmation email to the user
                     supabase.auth.sign_up({"email": email, "password": password})
                     st.success("Account created! Please check your email inbox to verify your address.")
                 except Exception as e:
                     st.error(f"Sign Up Failed: {e}")
         return False
 
-    # 2. FORGOT PASSWORD FLOW
     elif auth_mode == "Forgot Password":
         if "reset_email_sent" not in st.session_state:
             with st.form("forgot_form"):
@@ -40,7 +34,6 @@ def check_password():
                 
                 if submitted:
                     try:
-                        # Triggers an automated password reset email immediately
                         supabase.auth.reset_password_for_email(email)
                         st.session_state["reset_email_sent"] = email
                         st.success("A secure code has been sent to your email address!")
@@ -56,13 +49,11 @@ def check_password():
                 
                 if submitted:
                     try:
-                        # Verifies the user's secure token code
                         supabase.auth.verify_otp({
                             "email": st.session_state["reset_email_sent"],
                             "token": token,
                             "type": "recovery"
                         })
-                        # Updates the password permanently in the database
                         supabase.auth.update_user({"password": new_password})
                         st.success("Password changed successfully! You can now switch to Login.")
                         del st.session_state["reset_email_sent"]
@@ -70,7 +61,6 @@ def check_password():
                         st.error(f"Verification Failed: {e}")
         return False
 
-    # 3. LOGIN FLOW
     elif auth_mode == "Login":
         with st.form("login_form"):
             email = st.text_input("Email")
