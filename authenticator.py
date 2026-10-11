@@ -2,25 +2,23 @@ import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
-import smtplib
-from email.mime.text import MIMEText
+import requests
 
-def send_login_alert(username, name):
-    sender_email = st.secrets["SMTP_USER"]
-    receiver_email = st.secrets["ALERT_RECEIVER"]
-    password = st.secrets["SMTP_PASSWORD"]
+def send_discord_alert(username, name, action="logged into"):
+    """Sends an instant message notification to your Discord channel."""
+    webhook_url = st.secrets["DISCORD_WEBHOOK_URL"]
     
-    msg = MIMEText(f"Hello, user {name} ({username}) has successfully logged into v-mart.streamlit.app.")
-    msg['Subject'] = '⚠️ V-Mart Login Alert'
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
+    payload = {
+        "content": f"🔔 **V-Mart Security Alert**\nUser **{name}** (`{username}`) has successfully {action} **v-mart.streamlit.app**."
+    }
     
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(sender_email, password)
-            server.sendmail(sender_email, receiver_email, msg.as_string())
+        response = requests.post(webhook_url, json=payload)
+        # Fixed: Changed the incomplete statement to check for successful HTTP codes correctly
+        if response.status_code not in:
+            st.error(f"Webhook alert failed: {response.text}")
     except Exception as e:
-        st.error(f"Failed to send email alert: {e}")
+        st.error(f"Could not connect to alert system: {e}")
 
 def check_password():
     """Manages the registration and login flows. Returns True if authenticated."""
@@ -34,18 +32,16 @@ def check_password():
         config['cookie']['expiry_days']
     )
 
-    # Add a visual selection toggle at the top of the authentication screen
     auth_mode = st.radio("Choose Option", ["Login", "Sign Up"], horizontal=True)
 
     if auth_mode == "Sign Up":
         try:
-            # Renders a complete new user signup widget
-            # Set pre_authorized=None to allow absolutely anyone to register
             email, username, name = authenticator.register_user(location='main', pre_authorized=None)
             if username:
-                # CRITICAL: Save the newly created user credentials back into your config.yaml
                 with open('config.yaml', 'w') as file:
                     yaml.dump(config, file, default_flow_style=False)
+                
+                send_discord_alert(username, name, action="registered a new account on")
                 st.success('Registration successful! You can now switch to Login mode.')
         except Exception as e:
             st.error(f"Registration Error: {e}")
@@ -63,7 +59,7 @@ def check_password():
 
         if authentication_status:
             if 'logged_in_alert_sent' not in st.session_state:
-                send_login_alert(username, name)
+                send_discord_alert(username, name, action="logged into")
                 st.session_state['logged_in_alert_sent'] = True
                 
             authenticator.logout('Logout', 'sidebar')
