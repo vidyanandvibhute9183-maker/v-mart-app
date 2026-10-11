@@ -14,14 +14,13 @@ def send_discord_alert(username, name, action="logged into"):
     
     try:
         response = requests.post(webhook_url, json=payload)
-        # FIXED: Corrected the code check logic to avoid any syntax errors
         if response.status_code != 204 and response.status_code != 200:
             st.error(f"Webhook alert failed: {response.text}")
     except Exception as e:
         st.error(f"Could not connect to alert system: {e}")
 
 def check_password():
-    """Manages the registration and login flows. Returns True if authenticated."""
+    """Manages the registration, login, and password reset flows. Returns True if authenticated."""
     with open('config.yaml') as file:
         config = yaml.load(file, Loader=SafeLoader)
 
@@ -32,7 +31,8 @@ def check_password():
         config['cookie']['expiry_days']
     )
 
-    auth_mode = st.radio("Choose Option", ["Login", "Sign Up"], horizontal=True)
+    # Added "Forgot Password" to the option menu toggle
+    auth_mode = st.radio("Choose Option", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
     if auth_mode == "Sign Up":
         try:
@@ -45,6 +45,23 @@ def check_password():
                 st.success('Registration successful! You can now switch to Login mode.')
         except Exception as e:
             st.error(f"Registration Error: {e}")
+        return False
+
+    elif auth_mode == "Forgot Password":
+        try:
+            # Renders a widget for users to reset their forgotten passwords
+            username, email, new_password = authenticator.forgot_password(location='main')
+            if username:
+                # Update the new hashed password into config.yaml file
+                with open('config.yaml', 'w') as file:
+                    yaml.dump(config, file, default_flow_style=False)
+                
+                send_discord_alert(username, username, action="reset their password on")
+                st.success('Password reset successfully! You can now switch to Login mode.')
+            elif username is False:
+                st.error('Username not found')
+        except Exception as e:
+            st.error(f"Reset Error: {e}")
         return False
 
     elif auth_mode == "Login":
