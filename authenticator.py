@@ -1,11 +1,11 @@
 import streamlit as st
 from supabase import create_client, Client
 
-# Initialize the cloud database client connection
+# Hardcoding the public endpoints directly to avoid cached panel errors
 @st.cache_resource
 def get_supabase_client() -> Client:
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
+    url = "https://supabase.co"
+    key = "sb_publishable_ro3Lwte8OjXAgO5lMU3d_g_OGHg1"
     return create_client(url, key)
 
 def check_password():
