@@ -1,14 +1,10 @@
 credentials:
   usernames:
-    jsmith:
-      email: jsmith@gmail.com
-      name: John Smith
-      password: xxx # Pre-hashed password
-    rjones:
-      email: rjones@gmail.com
-      name: Rebecca Jones
-      password: yyy # Pre-hashed password
+    admin:
+      email: vidyanandvibhute9183@gmail.com
+      name: Vidyanand Vibhute
+      password: $2b$12$R.Sj9b9zB0.9Z0zZ0zZ0zu0zZ0zZ0zZ0zZ0zZ0zZ0zZ0zZ0zZ0zZ. # A generic hashed placeholder
 cookie:
   expiry_days: 30
-  key: some_signature_key
-  name: some_cookie_name
+  key: vmart_signature_key
+  name: vmart_cookie
