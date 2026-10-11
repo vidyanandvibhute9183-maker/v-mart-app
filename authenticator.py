@@ -31,7 +31,6 @@ def check_password():
         config['cookie']['expiry_days']
     )
 
-    # Added "Forgot Password" to the option menu toggle
     auth_mode = st.radio("Choose Option", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
     if auth_mode == "Sign Up":
@@ -49,15 +48,20 @@ def check_password():
 
     elif auth_mode == "Forgot Password":
         try:
-            # Renders a widget for users to reset their forgotten passwords
+            # The widget returns the username, email, and the raw new random password
             username, email, new_password = authenticator.forgot_password(location='main')
+            
             if username:
-                # Update the new hashed password into config.yaml file
+                # Save the new automatically hashed password into config.yaml file
                 with open('config.yaml', 'w') as file:
                     yaml.dump(config, file, default_flow_style=False)
                 
                 send_discord_alert(username, username, action="reset their password on")
-                st.success('Password reset successfully! You can now switch to Login mode.')
+                
+                # FIXED: Shows the temporary password clearly on screen so they can copy it
+                st.success('Password reset successfully!')
+                st.info(f"🔑 Your temporary password is: **{new_password}**")
+                st.caption("Copy this temporary password, switch back to 'Login' mode, and use it to log in.")
             elif username is False:
                 st.error('Username not found')
         except Exception as e:
