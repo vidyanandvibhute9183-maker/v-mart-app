@@ -1,4 +1,35 @@
 import streamlit as st
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
+import smtplib
+from email.mime.text import MIMEText
+
+# --- Paste the entire 'send_login_alert' function here ---
+# --- Paste the authenticator configuration & setup code here ---
+
+name, authentication_status, username = authenticator.login('main')
+
+if authentication_status:
+    # --- Email alert tracking code goes here ---
+    if 'logged_in_alert_sent' not in st.session_state:
+        send_login_alert(username, name)
+        st.session_state['logged_in_alert_sent'] = True
+        
+    authenticator.logout('Logout', 'sidebar')
+    
+    # ---------------------------------------------------------
+    # YOUR ORIGINAL APP CODE GOES HERE:
+    # Make sure all your original code lines below this point 
+    # are indented (spaced forward by 4 spaces) so they only 
+    # run after a successful login.
+    # ---------------------------------------------------------
+
+elif authentication_status == False:
+    st.error('Username/password is incorrect')
+elif authentication_status == None:
+    st.warning('Please enter your username and password')
+import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import os
