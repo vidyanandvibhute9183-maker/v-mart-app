@@ -1,4 +1,16 @@
 import streamlit as st
+from authenticator import check_password
+
+# This forces the login screen. If not logged in, it stops the app here.
+if not check_password():
+    st.stop()
+
+# -------------------------------------------------------------
+# ALL OF YOUR ORIGINAL CODE KEEPS RUNNING EXACTLY AS IT IS NOW
+# -------------------------------------------------------------
+st.title("Welcome to V-Mart")
+# ... your remaining code continues here without changes ...
+import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import os
