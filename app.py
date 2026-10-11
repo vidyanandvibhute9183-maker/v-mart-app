@@ -1,14 +1,15 @@
 import streamlit as st
 from authenticator import check_password
 
-# This forces the login screen. If not logged in, it stops the app here.
+# This forces the login/signup screen.
 if not check_password():
     st.stop()
 
 # -------------------------------------------------------------
-# ALL OF YOUR ORIGINAL CODE KEEPS RUNNING EXACTLY AS IT IS NOW
+# YOUR ORIGINAL APP CODE STARTS DIRECTLY BELOW:
 # -------------------------------------------------------------
 st.title("Welcome to V-Mart")
+
 # ... your remaining code continues here without changes ...
 import streamlit as st
 import pandas as pd
