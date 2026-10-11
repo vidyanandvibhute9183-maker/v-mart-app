@@ -14,7 +14,7 @@ def send_discord_alert(username, name, action="logged into"):
     
     try:
         response = requests.post(webhook_url, json=payload)
-        # Fixed: Checking status code properly with an equality operator
+        # FIXED: Corrected the code check logic to avoid any syntax errors
         if response.status_code != 204 and response.status_code != 200:
             st.error(f"Webhook alert failed: {response.text}")
     except Exception as e:
