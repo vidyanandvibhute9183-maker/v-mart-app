@@ -9,13 +9,11 @@ if not check_password():
 st.title("Welcome to V-Mart")
 
 # ... your remaining code continues here without changes ...
-import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import os
 from datetime import datetime
 
-st.set_page_config(page_title="V.MART", layout="wide")
 st.title("📊 V.MART — The Rate Trader")
 
 master_csv = "v_mart_master_data.csv"
