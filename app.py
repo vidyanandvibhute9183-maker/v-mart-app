@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
-from supabase_auth import check_password, get_user_supabase
+from vmart_login import check_password, get_user_supabase
 
 st.set_page_config(page_title="V.MART", layout="wide")
 
