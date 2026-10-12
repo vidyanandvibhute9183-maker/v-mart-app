@@ -4,10 +4,20 @@ import requests
 from supabase import create_client
 
 
-def get_supabase():
+
+def get_user_supabase():
+    """Create a Supabase client authenticated as the current user."""
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
+    token = st.session_state.get("access_token")
+
+    if not token or not st.session_state.get("user_id"):
+        return None
+
+    client = create_client(url, key)
+    client.postgrest.auth(token)
+    return client
+
 
 
 def send_discord_alert(email, action):
