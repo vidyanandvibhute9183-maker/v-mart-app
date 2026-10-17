@@ -4,25 +4,31 @@ import requests
 from supabase import create_client
 
 
-
-def get_user_supabase():
-    """Create a Supabase client authenticated as the current user."""
+def get_supabase():
+    """Create the base Supabase client for authentication."""
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
-    token = st.session_state.get("access_token")
+    return create_client(url, key)
 
-    if not token or not st.session_state.get("user_id"):
+
+def get_user_supabase():
+    """Create a Supabase client using the signed-in user's access token."""
+    token = st.session_state.get("access_token")
+    user_id = st.session_state.get("user_id")
+
+    if not token or not user_id:
         return None
 
-    client = create_client(url, key)
+    client = get_supabase()
     client.postgrest.auth(token)
     return client
 
 
-
 def send_discord_alert(email, action):
+    """Send a Discord notification without interrupting the app."""
     try:
         webhook = st.secrets.get("DISCORD_WEBHOOK_URL")
+
         if not webhook:
             return
 
@@ -38,16 +44,51 @@ def send_discord_alert(email, action):
             timeout=10,
         )
         response.raise_for_status()
+
     except Exception:
-        # A notification failure should not stop login or registration.
+        # Discord notification failures must not stop authentication.
         pass
 
 
+def clear_login_session():
+    """Clear the local Streamlit login session."""
+    for key in (
+        "user_id",
+        "user_email",
+        "access_token",
+        "refresh_token",
+    ):
+        st.session_state.pop(key, None)
+
+
 def check_password():
-    if st.session_state.get("user_id"):
+    """Display authentication screens and maintain the login session."""
+
+    # Handle an existing login first.
+    if st.session_state.get("user_id") and st.session_state.get("access_token"):
+        st.sidebar.write(
+            f"Signed in: {st.session_state.get('user_email', '')}"
+        )
+
+        if st.sidebar.button("Logout"):
+            clear_login_session()
+            st.rerun()
+
         return True
 
-    supabase = get_supabase()
+    # Clear an incomplete or expired local session.
+    if st.session_state.get("user_id") or st.session_state.get("access_token"):
+        clear_login_session()
+
+    try:
+        supabase = get_supabase()
+    except Exception:
+        st.error(
+            "Could not initialize Supabase. "
+            "Check SUPABASE_URL and SUPABASE_KEY in Streamlit secrets."
+        )
+        return False
+
     mode = st.radio(
         "Choose Option",
         ["Login", "Sign Up", "Forgot Password"],
@@ -62,6 +103,8 @@ def check_password():
             submitted = st.form_submit_button("Create Account")
 
         if submitted:
+            email = email.strip()
+
             if not email or not password:
                 st.error("Enter your email and password.")
             elif password != confirm:
@@ -69,22 +112,27 @@ def check_password():
             else:
                 try:
                     result = supabase.auth.sign_up({
-                        "email": email.strip(),
+                        "email": email,
                         "password": password,
                     })
-                    user = result.user
-                    if user:
-                        send_discord_alert(email.strip(), "created a new account")
+
+                    if result.user:
+                        send_discord_alert(
+                            email, "created a new account"
+                        )
                         st.success(
-                            "Account created. Check your email for a "
-                            "confirmation link if email confirmation is enabled."
+                            "Account created. Check your email for "
+                            "a confirmation link if required."
                         )
                     else:
-                        st.info("Check your email for the next steps.")
+                        st.info(
+                            "Check your email for the next steps."
+                        )
+
                 except Exception:
                     st.error(
-                        "Sign-up failed. Check the email, password requirements, "
-                        "and Supabase Auth settings."
+                        "Sign-up failed. Check your email, password "
+                        "requirements, and Supabase Auth settings."
                     )
 
     elif mode == "Login":
@@ -94,20 +142,34 @@ def check_password():
             submitted = st.form_submit_button("Login")
 
         if submitted:
+            email = email.strip()
+
             try:
                 result = supabase.auth.sign_in_with_password({
-                    "email": email.strip(),
+                    "email": email,
                     "password": password,
                 })
+
                 if result.user and result.session:
                     st.session_state["user_id"] = result.user.id
                     st.session_state["user_email"] = result.user.email
-                    st.session_state["access_token"] = result.session.access_token
-                    st.session_state["refresh_token"] = result.session.refresh_token
-                    send_discord_alert(email.strip(), "logged in")
+                    st.session_state["access_token"] = (
+                        result.session.access_token
+                    )
+                    st.session_state["refresh_token"] = (
+                        result.session.refresh_token
+                    )
+
+                    send_discord_alert(email, "logged in")
                     st.rerun()
+                else:
+                    st.error("Login failed. Please try again.")
+
             except Exception:
-                st.error("Login failed. Check your email, password, or email confirmation.")
+                st.error(
+                    "Login failed. Check your email, password, "
+                    "or email confirmation."
+                )
 
     else:
         with st.form("forgot_form"):
@@ -117,28 +179,13 @@ def check_password():
         if submitted:
             try:
                 supabase.auth.reset_password_for_email(email.strip())
-                send_discord_alert(email.strip(), "requested a password reset")
-                st.success("If the account exists, a password reset email will be sent.")
             except Exception:
-                st.success("If the account exists, a password reset email will be sent.")
-
-    if st.session_state.get("user_id"):
-        st.sidebar.write(
-            f"Signed in: {st.session_state.get('user_email', '')}"
-        )
-        if st.sidebar.button("Logout"):
-            try:
-                supabase.auth.sign_out()
-            except Exception:
+                # Avoid exposing account existence or internal errors.
                 pass
-            for key in [
-                "user_id",
-                "user_email",
-                "access_token",
-                "refresh_token",
-            ]:
-                st.session_state.pop(key, None)
-            st.rerun()
-        return True
+
+            st.success(
+                "If the account exists, a password reset email "
+                "will be sent."
+            )
 
     return False
