@@ -129,9 +129,9 @@ def check_password():
                             "Check your email for the next steps."
                         )
 
-except Exception as e:
-    st.error("Supabase sign-up error:")
-    st.code(f"{type(e).__name__}: {e}")"
+            except Exception as e:
+                st.error("Supabase login error:")
+                st.code(f"{type(e).__name__}: {e}")
                     
 
     elif mode == "Login":
