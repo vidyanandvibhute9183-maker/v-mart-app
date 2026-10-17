@@ -46,9 +46,9 @@ def send_discord_alert(email, action):
         response.raise_for_status()
 
     except Exception:
-        # Discord notification failures must not stop authentication.
-        pass
-
+        except Exception as e:
+    st.error("Supabase sign-up error:")
+    st.code(f"{type(e).__name__}: {e}") 
 
 def clear_login_session():
     """Clear the local Streamlit login session."""
@@ -129,11 +129,10 @@ def check_password():
                             "Check your email for the next steps."
                         )
 
-                except Exception:
-                    st.error(
-                        "Sign-up failed. Check your email, password "
-                        "requirements, and Supabase Auth settings."
-                    )
+except Exception as e:
+    st.error("Supabase sign-up error:")
+    st.code(f"{type(e).__name__}: {e}")"
+                    
 
     elif mode == "Login":
         with st.form("login_form"):
@@ -166,10 +165,9 @@ def check_password():
                     st.error("Login failed. Please try again.")
 
             except Exception:
-                st.error(
-                    "Login failed. Check your email, password, "
-                    "or email confirmation."
-                )
+            except Exception as e:
+    st.error("Supabase login error:")
+    st.code(f"{type(e).__name__}: {e}")
 
     else:
         with st.form("forgot_form"):
